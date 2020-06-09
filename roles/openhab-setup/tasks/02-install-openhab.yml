@@ -1,0 +1,33 @@
+---
+- name: "Add openhab key"
+  apt_key:
+    url: "https://bintray.com/user/downloadSubjectPublicKey?username=openhab"
+    state: present
+
+- name: "Add openhab repository"
+  lineinfile:
+    path: "/etc/apt/sources.list.d/openhab2.list"
+    line: "deb https://dl.bintray.com/openhab/apt-repo2 stable main"
+    create: true
+
+- name: "Update apt"
+  shell: apt update
+
+- name: "Install required packages"
+  apt:
+    name: "openhab2"
+    state: present
+
+- name: "Create certificate folder"
+  file:
+    path: /etc/ssl/nginx
+    state: directory
+
+- name: "Create certificates for the reverse proxy"
+  shell: openssl req -x509 -nodes -days 3650 -newkey rsa:2048 -keyout /etc/ssl/nginx/openhab-proxy.key -out /etc/ssl/nginx/openhab-proxy.crt -subj "/C={{ pki.country }}/ST={{ pki.state }}/L={{ pki.city }}/O={{ pki.org }}"
+
+- name: "Upload reverse proxy conf file"
+  copy:
+    src: proxy.conf
+    dest: /etc/nginx/sites-available/openhab-proxy.conf
+

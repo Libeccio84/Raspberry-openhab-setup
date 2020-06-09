@@ -1,0 +1,46 @@
+---
+- name: "Add 8.8.8.8 to default DNS"
+  copy:
+    src: "resolv.conf"
+    dest: "/etc/resolv.conf"
+    backup: true
+
+- name: "Get netmask"
+  set_fact:
+    dhcp_mask: "{{ (dhcp.serverIP + dhcp.netMask)|ipaddr('netmask') }}"
+
+- name: "Update all"
+  shell: "apt update && apt upgrade --yes"
+
+- name: "Install required packages"
+  apt:
+    name:
+      - "openjdk-11-jdk"
+      - "apt-transport-https"
+      - "apache2-utils"
+      - "nginx"
+      - "netfilter-persistent"
+      - "iptables-persistent"
+      - "dnsutils"
+      - "zip"
+    state: present
+
+- include: 01-hotspot-setup.yml
+
+# - include: 02-openvpn-setup.yml
+
+- include: 02-install-openhab.yml
+
+- name: "Write OpenVPN README"
+  copy:
+    src: openvpn_readme
+    dest: /root/README_OpenVPN
+
+- name: "Write OpenHAB README"
+  copy:
+    src: openhab_readme
+    dest: /root/README_OpenHAB
+
+- name: "Do it yourself"
+  debug:
+    msg: "You can now install openvpn as described in /tmp/README_OpenVPN. Read /tmp/README_OpenHAB after that. Have fun!!!"

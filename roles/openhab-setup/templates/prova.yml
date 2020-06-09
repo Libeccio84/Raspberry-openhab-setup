@@ -1,0 +1,16 @@
+---
+- hosts: localhost
+  become: false
+  gather_facts: true
+  vars:
+    ca_exp: 30
+    cert_exp: 10
+  tasks:
+    - set_fact:
+        # asn_date: "{{ ansible_date_time.date|to_datetime('%Y-%m-%d') }}"
+        ca_end: "{{ asn_date|int + ca_exp*10000 }}"
+      vars:
+        asn_date: "{{ ansible_date_time.date|regex_replace('-','') }}"
+    - debug:
+        var: ca_end
+    - shell: echo {{ ca_end }}

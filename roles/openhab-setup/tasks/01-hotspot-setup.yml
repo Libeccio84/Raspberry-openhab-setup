@@ -1,0 +1,46 @@
+---
+# source: https://www.raspberryconnect.com/projects/65-raspberrypi-hotspot-accesspoints/168-raspberry-pi-hotspot-access-point-dhcpcd-method
+- name: "Install dnsmaq and hostapd"
+  apt:
+    name:
+      - "dnsmasq"
+      - "hostapd"
+    state: present
+
+- name: "Upload dhcpcd.conf"
+  template:
+    src: "dhcpcd.conf.j2"
+    dest: "/etc/dhcpcd.conf"
+    backup: true
+
+- name: "Upload hostapd.conf"
+  template:
+    src: "hostapd.conf.j2"
+    dest: "/etc/hostapd/hostapd.conf"
+    backup: true
+
+- name: "Upload dnsmasq.conf"
+  template:
+    src: "dnsmasq.conf.j2"
+    dest: "/etc/dnsmasq.conf"
+    backup: true
+
+- name: "Unblock wlan"
+  shell: rfkill unblock wlan
+
+
+- name: "Force hostapd configuration file"
+  replace:
+    path: "/etc/default/hostapd"
+    regexp: "^.*DAEMON_CONF.*$"
+    replace: 'DAEMON_CONF="/etc/hostapd/hostapd.conf"'
+
+- name: "Start and enable services"
+  systemd:
+    name: "{{ item }}"
+    masked: false
+    state: restarted
+  loop:
+    - dhcpcd
+    - dnsmasq
+    - hostapd

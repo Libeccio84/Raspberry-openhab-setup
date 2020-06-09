@@ -1,0 +1,33 @@
+router_ip: "10.3.3.1"
+wifiAP_interface: "wlan0"
+dhcp:
+  country_code: "IT"
+  interface: "{{ wifiAP_interface }}"
+  serverIP: "10.0.0.1"
+  netMask: "/24"
+  minIP: "10.0.0.100"
+  maxIP: "10.0.0.254"
+  lease_h: "24"
+
+hostapd:
+  interface: "{{ wifiAP_interface }}"
+  5GHz: false
+  channel: 6
+  ssid: "my-IOT-wan"
+  key: "iot-wan-passwd"
+
+ovpn:
+  proto: udp
+  port: 22885
+
+ovpn_clients:
+  - "client1"
+  - "client2"
+
+pki:
+  country: "IT"
+  state: "Italia"
+  city: "Livorno"
+  org: "home.int"
+  duration: 30
+

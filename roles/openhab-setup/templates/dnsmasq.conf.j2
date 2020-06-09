@@ -1,0 +1,4 @@
+interface={{ dhcp.interface }}
+dhcp-range={{ dhcp.minIP }},{{ dhcp.maxIP }},{{ dhcp_mask }},{{ dhcp.lease_h }}h
+domain=casetta.int
+address=/gw.casetta.int/{{ dhcp.serverIP }}

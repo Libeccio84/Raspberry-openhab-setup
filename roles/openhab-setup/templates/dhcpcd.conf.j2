@@ -1,0 +1,38 @@
+# A sample configuration for dhcpcd.
+# See dhcpcd.conf(5) for details.
+
+# Use the hardware address of the interface for the Client ID.
+clientid
+
+# Persist interface configuration when dhcpcd exits.
+persistent
+
+# Rapid commit support.
+# Safe to enable by default because it requires the equivalent option set
+# on the server to actually work.
+option rapid_commit
+
+# A list of options to request from the DHCP server.
+option domain_name_servers, domain_name, domain_search, host_name
+option classless_static_routes
+# Respect the network MTU. This is applied to DHCP routes.
+option interface_mtu
+
+# A ServerID is required by RFC2131.
+require dhcp_server_identifier
+
+# Generate SLAAC address using the Hardware Address of the interface
+#slaac hwaddr
+# OR generate Stable Private IPv6 Addresses based from the DUID
+slaac private
+
+interface {{ ansible_default_ipv4.interface|default('eth0') }}
+        static routers={{ router_ip }}
+	static ip_address={{ (ansible_default_ipv4.address|default(ansible_eth0.ipv4.address) + '/' + ansible_default_ipv4.netmask|default(ansible_eth0.ipv4.netmask))|ipaddr('address/prefix') }}
+	static domain_name_servers=8.8.8.8
+	
+
+interface {{ dhcp.interface|default('wlan0') }}
+	static ip_address={{ dhcp.serverIP }}{{ dhcp.netMask  }}
+	nohook wpa_supplicant
+        # static routers={{ dhcp.serverIP }}

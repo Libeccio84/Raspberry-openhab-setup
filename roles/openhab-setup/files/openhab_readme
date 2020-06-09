@@ -1,0 +1,15 @@
+OpenHAB - client setup
+======================
+1. As root run the following command for generating the proxy user
+	htpasswd -c /etc/nginx/.htpasswd opnhbProxy
+
+2. Take note of the openVPN IP (see tun0 interface), it should be 10.8.0.1
+
+3. Install Openhab client
+
+4. Access openVPN
+
+5. Open OpenHAB client then:
+     - Settings > Connection > Remote
+     - Server: https://10.8.0.1:8443
+     - Username and password: use credentials generated at point 1

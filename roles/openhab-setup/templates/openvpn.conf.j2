@@ -1,0 +1,15 @@
+# https://www.ionos.it/digitalguide/server/configurazione/configurare-una-vpn-con-il-raspberry-pi-e-openvpn/
+dev tun
+proto {{ ovpn.proto }}
+port {{ ovpn.port }}
+ca /etc/openvpn/pki/CA/certs/ca.crt
+cert /etc/openvpn/pki/tls/server.crt
+key /etc/openvpn/pki/tls/private/server.key
+server {{ dhcp.serverIP }} {{ (dhcp.serverIP + dhcp.netMask)|ipaddr('netmask') }}A
+persist-key
+persist-tun
+user nobody
+group nogroup
+status /var/log/openvpn-status.log
+verb 3
+client-to-client

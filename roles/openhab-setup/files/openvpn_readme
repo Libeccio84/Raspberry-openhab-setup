@@ -1,0 +1,50 @@
+OpenVPN - Setup
+===============
+1. Reserve an IP address for you raspberry (from your router), e.g. 10.3.3.10
+
+2. Configure that static IP on eth0 in /etc/dhcpcd.conf
+	interface eth0
+	static ip_address=10.3.3.10
+	static routers=10.3.3.1
+
+3. Get a free DNS entry for your router on https://freemyip.com
+
+4. Register the return URL, it will be used later on
+
+5. Create an unpriviledge user
+	useradd -m ovpn-admin
+6. Run
+	curl -L https://install.pivpn.io/ | bash
+   and provide the followings to the TUI:
+      - 
+      - use eth0
+      - insert you RPi static IP (e.g. 10.3.3.10)
+      - select the newly created user ovpn-admin
+      - that you want to install OpenVPN
+      - use 'UDP'
+      - declare openvpn process port (e.g. 11111)
+      - choose you DNS server (use custom if you want your router to be your DNS server)
+      - insert the DNS entry (see point 3 in this guide)
+      - go ahead with reccomended options
+
+7. Let openvpn update your router IP whenever started
+	systemctl edit openvpn
+		[Service]
+		ExecStartPre=/usr/bin/curl "<use the URL registered at point 4>"
+
+8. Reload daemons
+	systemctl daemon-reload
+
+8. Configure your router for port forwarding (router:11111 -> RPi:11111)
+
+9. Reboot your raspberry
+
+
+OpenVPN - Adding Client
+=======================
+1. Generate you users credentials with
+	pivpn add nopass
+   
+   remove nopass if you want to enforce security providing pw to login to your VPN
+
+2. Export the newly created file (located at /home/ovpn-admin/ovpns) and import in your device

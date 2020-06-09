@@ -1,0 +1,82 @@
+---
+- name: "Install openvpn server"
+  apt:
+    name: openvpn
+    state: present
+
+- name: "Upload conf file"
+  tempate:
+    src: "openvpn.conf.j2"
+    dest: "/etc/openvpn/openvpn.conf"
+
+- name: "Create PKI folder"
+  file:
+    path: "/etc/openvpn/pki/{{ item }}"
+    state: directory
+  loop:
+    - "CA/private"
+    - "CA/certs"
+    - "tls/private"
+    - "tls/csr"
+
+- name: "Create ca.key"
+  openssl_privatekey:
+    path: "/etc/openvpn/pki/CA/private/ca.key"
+    cipher: aes256
+    size: 2048
+
+- name: "Generate CA certificate"
+  openssl_certificate:
+    path: "/etc/openvpn/pki/CA/certs/ca.crt"
+    privatekey_path: "/etc/openvpn/pki/CA/private/ca.key"
+    provider: selfsigned
+    
+- name: "Check ca.crt status"
+  stat:
+    path: "/etc/openvpn/pki/CA/certs/ca.crt"
+  register: ca_cert_status
+
+- name: "Generate CA certificate"
+  shell: openssl req -new -x509 -days {{ duration }} -key {{ key }} -out {{ crt }} -subj "{{ subj }}"
+  vars:
+    duration: "{{ pki.duration|int * 365 }}"
+    key: "/etc/openvpn/pki/CA/private/ca.key"
+    crt: "/etc/openvpn/pki/CA/certs/ca.crt"
+    subj: "/C={{ pki.country }}/ST={{ pki.state }}/L={{ pki.city }}/O={{ pki.org }}"
+  when: not ca_cert_status.stat.exists
+
+- name: "Generate clients' private keys"
+  openssl_privatekey:
+    path: "/etc/openvpn/pki/private/{{ item }}.key"
+    cipher: aes256
+    size: 2048
+  loop: "{{ ovpn_clients }}"
+
+- name: "Generate CSR for clients"
+  openssl_csr:
+    path: "/etc/openvpn/pki/tls/csr/{{ item }}.csr"
+    privatekey_path: "/etc/openvpn/pki/private/{{ item }}.key"
+    country_name: "{{ pki.country }}"
+    locality_name: {{ pki.city }}"
+    state_or_province_name: "{{ pki.state }}"
+    organization_name: "{{ pki.org }}"
+  loop: "{{ ovpn_clients }}"
+
+- name: "Check clients' cert status"
+  stat:
+    path: "/etc/openvpn/pki/pki/certs/{{ item }}.crt"
+  register: client_cert_status
+  loop: "{{ ovpn_clients }}"
+
+
+- name: "Generate clients' certificates"
+  shell: openssl x509 -req -in 
+  when: missing
+  vars:
+    client_key:  "/etc/openvpn/pki/pki/private/{{ item.item }}.key"
+    missing: "{{ not item.stat.exists|bool }}"
+    csr: "/etc/openvpn/pki/tls/csr/{{ item.item }}.csr"
+    CA: "/etc/openvpn/pki/CA/certs/ca.crt"
+    CAkey: "/etc/openvpn/pki/CA/private/ca.key"
+  loop: "{{ client_cert_status.results }}"
+
